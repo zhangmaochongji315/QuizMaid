@@ -14,7 +14,7 @@ public class UserController {
 
     @GetMapping("/")
     public BaseResponse<String> healthCheck() {
-        return ResultUtils.success("ok test check");
+        return ResultUtils.success("ok test  tttt check");
     }
 }
 
