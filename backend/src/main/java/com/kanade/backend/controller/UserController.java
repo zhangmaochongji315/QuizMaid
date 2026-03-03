@@ -81,7 +81,7 @@ public class UserController {
     // todo 邮箱注册登录
     @PostMapping("/send")
     public BaseResponse<String> sendEmail(String email){
-        Dict dict = YamlUtil.loadByPath("application.yml");
+        Dict dict = YamlUtil.loadByPath("application-local.yml");
         Map<String, Object> dataSourceConfig = dict.getByPath("spring.mail");
         String username = String.valueOf(dataSourceConfig.get("username"));
 

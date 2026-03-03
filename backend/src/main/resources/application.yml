@@ -22,31 +22,31 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   application:
     name: QuizMaid
-  mail:
-    # 配置 SMTP 服务器地址
-    host: smtp.126.com
-    # 发送者邮箱
-    username: XXXX@126.com
-    # 配置密码，注意不是真正的密码，而是刚刚申请到的授权码
-    password: cccccc
-    # 端口号465或587
-    port: 465
-    # 默认的邮件编码为UTF-8
-    default-encoding: UTF-8
-    protocol: smtps
-    # 配置SSL 加密工厂
-    properties:
-      mail:
-        smtp:
-          auth: true
-          # 465端口必须开启SSL，禁用starttls
-          ssl:
-            enable: true
-            required: true
-          starttls:
-            enable: false
-          timeout: 10000
-          connectiontimeout: 10000
+#  mail:
+#    # 配置 SMTP 服务器地址
+#    host: smtp.126.com
+#    # 发送者邮箱
+#    username:
+#    # 配置密码，注意不是真正的密码，而是刚刚申请到的授权码
+#    password:
+#    # 端口号465或587
+#    port: 465
+#    # 默认的邮件编码为UTF-8
+#    default-encoding: UTF-8
+#    protocol: smtps
+#    # 配置SSL 加密工厂
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          # 465端口必须开启SSL，禁用starttls
+#          ssl:
+#            enable: true
+#            required: true
+#          starttls:
+#            enable: false
+#          timeout: 10000
+#          connectiontimeout: 10000
 
   # MyBatis ??
   mybatis:
