@@ -14,8 +14,14 @@ import com.kanade.backend.service.UserService;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import static com.kanade.backend.common.Constant.USER_LOGIN_STATE;
 
+@Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
 
@@ -50,21 +56,62 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setUsername(userRegisterDTO.getUserName());
         user.setPassword(md5DigestAsHex);
+        user.setNickname(userRegisterDTO.getUserName());
+        boolean saved = this.save(user);
+        if (saved) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "db fail to save");
+        }
+        log.info("user{} is saved in database",user.getUsername());
         return user;
     }
 
     @Override
-    public UserLoginVO getLoginUserVO(UserSign user) {
-        return null;
+    public UserLoginVO getLoginUserVO(User user) {
+        if (user == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        UserLoginVO userLoginVO = new UserLoginVO();
+        BeanUtils.copyProperties(user,userLoginVO);
+
+        return userLoginVO;
     }
 
     @Override
     public UserLoginVO UserLogin(UserLoginDTO userLoginDTO, HttpServletRequest request) {
+        ThrowUtils.throwIf(StrUtil.isBlank(userLoginDTO.getUserPassword()) ,ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(StrUtil.isBlank(userLoginDTO.getUsername()),ErrorCode.PARAMS_ERROR);
+
+        String md5DigestAsHex = DigestUtils.md5DigestAsHex(userLoginDTO.getUserPassword().getBytes());
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("password",md5DigestAsHex);
+
+        User user = this.mapper.selectOneByQuery(queryWrapper);
+        if (user == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"user is not exist or password is wrong");
+        }
+
+        request.getSession().setAttribute(USER_LOGIN_STATE,user);
         return null;
     }
 
     @Override
     public User getUserLoginInfo(HttpServletRequest request) {
-        return null;
+        User current = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+
+        if (current == null || current.getId() == null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+
+        return current;
+    }
+
+    @Override
+    public boolean logout(HttpServletRequest request) {
+        User user =(User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"not login");
+        }
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        return true;
     }
 }
