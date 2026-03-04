@@ -22,7 +22,7 @@ public class UserVO {
     /**
      * BCrypt加密密码
      */
-    private String password;
+
 
     /**
      * 昵称

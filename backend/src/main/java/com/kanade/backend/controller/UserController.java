@@ -1,6 +1,7 @@
 package com.kanade.backend.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.setting.yaml.YamlUtil;
@@ -10,18 +11,17 @@ import com.kanade.backend.email.IEmailService;
 import com.kanade.backend.exception.BusinessException;
 import com.kanade.backend.exception.ErrorCode;
 import com.kanade.backend.exception.ThrowUtils;
-import com.kanade.backend.model.dto.UserLoginByEmailDTO;
-import com.kanade.backend.model.dto.UserLoginDTO;
-import com.kanade.backend.model.dto.UserRegisterByEmailDTO;
-import com.kanade.backend.model.dto.UserRegisterDTO;
+import com.kanade.backend.model.dto.*;
 import com.kanade.backend.model.entity.User;
 import com.kanade.backend.model.vo.UserLoginVO;
+import com.kanade.backend.model.vo.UserVO;
 import com.kanade.backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -77,8 +77,12 @@ public class UserController {
     }
 
     // todo oauth 登录注册
+    @PostMapping("/callback")
+    public  BaseResponse<UserLoginVO> loginGithubCallback(){
+        return null;
+    }
 
-    // todo 邮箱注册登录
+    // 邮箱注册登录
     @PostMapping("/send")
     public BaseResponse<String> sendEmail(String email){
         Dict dict = YamlUtil.loadByPath("application-local.yml");
@@ -117,7 +121,54 @@ public class UserController {
         UserLoginVO userLoginVO = userService.loginByEmail(user.getEmail(),request);
         return ResultUtils.success(userLoginVO);
     }
+    // 个人信息编辑
+    @PostMapping("/update")
+    public BaseResponse<UserVO> updateSelf(@RequestBody UserUpdateDTO userUpdateDTO){
 
+        // 1. 获取当前登录用户ID（强制修改自己，防越权）
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // 2. DTO 转换为 实体类（MyBatis-Plus 要求）
+        User user = new User();
+        BeanUtils.copyProperties(userUpdateDTO, user);
+        user.setId(userId); // 强制绑定当前登录用户ID
+
+        // log.info(String.valueOf(user)+"\n"+ userUpdateDTO);
+
+        // 3. 执行更新
+        boolean success = userService.updateById(user);
+        if (!success) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        // 4. 查询最新用户信息，返回给前端
+        User newUser = userService.getById(userId);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(newUser, userVO);
+        return ResultUtils.success(userVO);
+    }
+
+    // 添加用户
+    @PostMapping("/add")
+    @SaCheckRole("admin")
+    public BaseResponse<Long> addUser(@RequestBody UserAddDTO userAddDTO){
+        if(userAddDTO == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"request is null");
+        }
+        // copy
+        User user = new User();
+        BeanUtils.copyProperties(userAddDTO, user);
+        // set password
+        String password = DigestUtils.md5DigestAsHex("123456".getBytes());
+        user.setPassword(password);
+
+        log.info(userAddDTO.toString());
+        log.info(user.toString());
+        // save
+        boolean save = userService.save(user);
+        log.info(userAddDTO.getUsername() + "create successfully ");
+        return ResultUtils.success(user.getId());
+    }
 
     // 根据id 获取用户
     @GetMapping("/get/user")
