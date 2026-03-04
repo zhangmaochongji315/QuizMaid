@@ -36,4 +36,6 @@ public interface UserService extends IService<User> {
     QueryWrapper getQueryWrapper(UserQueryDTO userQueryDTO);
 
     List<UserVO> getUserVOList(List<User> records);
+
+    User getByOauth(String github, String string);
 }

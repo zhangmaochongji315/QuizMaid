@@ -251,6 +251,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
+    public User getByOauth(String oauthType, String oauthOpenid) {
 
+        QueryWrapper wrapper = new QueryWrapper();
+        // 匹配你的表字段：oauthType / oauthOpenid / isDeleted
+        wrapper.eq("oauthType", oauthType);
+        wrapper.eq("oauthOpenid", oauthOpenid);
+        wrapper.eq("isDeleted", 0);
+
+        // MP 自带方法，直接查询
+        return getOne(wrapper);
+
+    }
 
 }

@@ -1,6 +1,9 @@
 package com.kanade.backend.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.oauth2.SaOAuth2Manager;
+import cn.dev33.satoken.oauth2.data.model.AccessTokenModel;
+import cn.dev33.satoken.oauth2.data.model.CodeModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.RandomUtil;
@@ -20,6 +23,7 @@ import com.kanade.backend.model.vo.UserVO;
 import com.kanade.backend.service.UserService;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +31,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -80,13 +85,6 @@ public class UserController {
         return ResultUtils.success(register);
     }
 
-    // todo oauth 登录注册
-    @PostMapping("/callback")
-    public  BaseResponse<UserLoginVO> loginGithubCallback(){
-        return null;
-    }
-
-
     // 邮箱注册登录
     @PostMapping("/send")
     public BaseResponse<String> sendEmail(String email){
@@ -109,7 +107,8 @@ public class UserController {
         if (!code.equals(user.getCode())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"验证码错误");
         }
-        // todo 检查完成后删除验证码缓存
+        // 检查完成后删除验证码缓存
+        redisTemplate.delete(key);
         User register = userService.registerByEmail(user);
         return ResultUtils.success(register);
     }
@@ -123,6 +122,7 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"验证码错误");
         }
 
+        redisTemplate.delete(key);
         UserLoginVO userLoginVO = userService.loginByEmail(user.getEmail(),request);
         return ResultUtils.success(userLoginVO);
     }
@@ -299,6 +299,7 @@ public class UserController {
         String code = redisTemplate.opsForValue().get(EMAIL_VERIFY_CODE + resetPasswordDTO.getEmail());
         ThrowUtils.throwIf(!code.equals(resetPasswordDTO.getCode()),ErrorCode.PARAMS_ERROR,"验证码错误");
 
+        redisTemplate.delete(EMAIL_VERIFY_CODE + resetPasswordDTO.getEmail());
         user.setPassword(DigestUtils.md5DigestAsHex(resetPasswordDTO.getPassword().getBytes()));
         boolean updateById = userService.updateById(user);
         ThrowUtils.throwIf(!updateById,ErrorCode.PARAMS_ERROR);
@@ -317,6 +318,7 @@ public class UserController {
         // 验证码校验
         String code = redisTemplate.opsForValue().get(EMAIL_VERIFY_CODE + bindEmailDTO.getEmail());
         ThrowUtils.throwIf(!code.equals(bindEmailDTO.getCode()),ErrorCode.PARAMS_ERROR,"验证码错误");
+        redisTemplate.delete(EMAIL_VERIFY_CODE + bindEmailDTO.getEmail());
         // 设定邮箱
         user.setEmail(bindEmailDTO.getEmail());
         user.setEmailVerified(1);

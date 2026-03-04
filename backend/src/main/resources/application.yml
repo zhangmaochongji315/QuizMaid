@@ -105,3 +105,8 @@ sa-token:
   token-style: uuid
   # 是否输出操作日志
   is-log: true
+
+#github:
+#  client-id:
+#  client-secret:
+#  redirect-uri: http://localhost:8080/oauth/github/callback
