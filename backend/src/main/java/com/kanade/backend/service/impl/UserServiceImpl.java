@@ -1,9 +1,9 @@
 package com.kanade.backend.service.impl;
 
-import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.kanade.backend.common.Constant;
 import com.kanade.backend.exception.BusinessException;
 import com.kanade.backend.exception.ErrorCode;
 import com.kanade.backend.exception.ThrowUtils;
@@ -13,7 +13,6 @@ import com.kanade.backend.model.dto.UserQueryDTO;
 import com.kanade.backend.model.dto.UserRegisterByEmailDTO;
 import com.kanade.backend.model.dto.UserRegisterDTO;
 import com.kanade.backend.model.entity.User;
-import com.kanade.backend.model.entity.UserSign;
 import com.kanade.backend.model.vo.UserLoginVO;
 import com.kanade.backend.model.vo.UserVO;
 import com.kanade.backend.service.UserService;
@@ -23,11 +22,14 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBitSet;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,6 +40,12 @@ import static com.kanade.backend.common.Constant.USER_LOGIN_STATE;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+
+    private final RedissonClient redissonClient;
+
+    public UserServiceImpl(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+    }
 
     @Override
     public User register(UserRegisterDTO userRegisterDTO) {
@@ -119,6 +127,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         log.info("user{} is saved in database",user1.getUsername());
         return user1;
+    }
+
+    @Override
+    public boolean userSignIn(long id) {
+        LocalDate date = LocalDate.now();
+        String userSignInRedisKey = Constant.getUserSignInRedisKey(date.getYear(), id);
+        RBitSet bitSet = redissonClient.getBitSet(userSignInRedisKey);
+
+        int dayOfYear = date.getDayOfYear();
+        if(!bitSet.get(dayOfYear)){
+            return bitSet.set(dayOfYear,true);
+        }
+
+        return true;
     }
 
     @Override

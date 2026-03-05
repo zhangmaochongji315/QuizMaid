@@ -10,7 +10,6 @@ import com.kanade.backend.model.vo.UserVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -38,4 +37,6 @@ public interface UserService extends IService<User> {
     List<UserVO> getUserVOList(List<User> records);
 
     User getByOauth(String github, String string);
+
+    boolean userSignIn(long id);
 }

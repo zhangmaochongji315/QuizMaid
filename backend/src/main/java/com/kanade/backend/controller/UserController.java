@@ -329,5 +329,13 @@ public class UserController {
 
         return ResultUtils.success(userService.getUserVO(user));
     }
+
+    // 登录签到
+    @PostMapping("/signin")
+    public BaseResponse<Boolean> userSignIn(){
+        long loginId = StpUtil.getLoginIdAsLong();
+        boolean b = userService.userSignIn(loginId);
+        return ResultUtils.success(b);
+    }
 }
 
