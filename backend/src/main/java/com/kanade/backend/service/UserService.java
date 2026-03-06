@@ -5,6 +5,7 @@ import com.kanade.backend.model.dto.UserQueryDTO;
 import com.kanade.backend.model.dto.UserRegisterByEmailDTO;
 import com.kanade.backend.model.dto.UserRegisterDTO;
 import com.kanade.backend.model.entity.User;
+import com.kanade.backend.model.vo.UserHeatMapVO;
 import com.kanade.backend.model.vo.UserLoginVO;
 import com.kanade.backend.model.vo.UserVO;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -45,4 +46,7 @@ public interface UserService extends IService<User> {
     boolean userSignIn(long id);
 
     List<Integer> getUserSignInData(long loginId, Integer year);
+
+    Integer getUserSignDays(long loginId);
+    List<UserHeatMapVO> getUserHeatMap(long loginId);
 }

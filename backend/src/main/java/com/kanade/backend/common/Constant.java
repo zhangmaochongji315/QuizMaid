@@ -11,4 +11,15 @@ public interface Constant {
     static String getUserSignInRedisKey(int year, long userId) {
         return String.format("%s:%s:%s", USER_SIGN_IN_REDIS_KEY_PREFIX, year, userId);
     }
+    // 连续签到天数 KEY
+     static String getUserContinuousSignKey(long userId) {
+        return String.format("sign:continuous:%d", userId);
+    }
+    // 最后签到日期 KEY
+     static String getUserLastSignDateKey(long userId) {
+        return String.format("sign:lastdate:%d", userId);
+    }
+     static String getUserQuestionHashKey(long userId) {
+        return String.format("question:count:user:%d", userId);
+    }
 }

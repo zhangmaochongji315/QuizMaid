@@ -13,6 +13,7 @@ import com.kanade.backend.model.dto.UserQueryDTO;
 import com.kanade.backend.model.dto.UserRegisterByEmailDTO;
 import com.kanade.backend.model.dto.UserRegisterDTO;
 import com.kanade.backend.model.entity.User;
+import com.kanade.backend.model.vo.UserHeatMapVO;
 import com.kanade.backend.model.vo.UserLoginVO;
 import com.kanade.backend.model.vo.UserVO;
 import com.kanade.backend.service.UserService;
@@ -23,6 +24,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBitSet;
+import org.redisson.api.RBucket;
+import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.kanade.backend.common.Constant.USER_LOGIN_STATE;
@@ -140,6 +144,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return bitSet.set(dayOfYear,true);
         }
 
+        String continuousKey = Constant.getUserContinuousSignKey(id);
+        String lastDateKey = Constant.getUserLastSignDateKey(id);
+
+        RBucket<String> lastDateBucket = redissonClient.getBucket(lastDateKey);
+        RBucket<Integer> continuousBucket = redissonClient.getBucket(continuousKey);
+        String lastSignDate = lastDateBucket.get();
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        if (lastSignDate == null) {
+            // 首次签到
+            continuousBucket.set(1);
+        } else {
+            LocalDate lastDate = LocalDate.parse(lastSignDate);
+            if (lastDate.equals(today)) {
+                // 今日重复签到
+            } else if (lastDate.equals(yesterday)) {
+                // 连续签到（包含 12.31 → 01.01 跨年场景）
+                continuousBucket.set(continuousBucket.get() + 1);
+            } else {
+                // 断签（无论是否跨年，直接重置）
+                continuousBucket.set(1);
+            }
+        }
+        // 更新最后签到日期
+        lastDateBucket.set(today.toString());
         return true;
     }
 
@@ -163,6 +193,67 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             index = bitSet.nextSetBit(index + 1);
         }
         return dayList;
+    }
+
+    @Override
+    public Integer getUserSignDays(long loginId) {
+        String userContinuousSignKey = Constant.getUserContinuousSignKey(loginId);
+        RBucket<Object> bucket = redissonClient.getBucket(userContinuousSignKey);
+        return bucket.get() == null ? 0 : (Integer) bucket.get();
+    }
+
+    @Override
+    public List<UserHeatMapVO> getUserHeatMap(long loginId) {
+        // todo 过去365天 根据bitmap获取
+        // 1. 定义时间范围：近365天
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(364);
+
+        // 2. 【1次Redis请求】获取用户所有做题记录（Hash结构）
+        String hashKey = Constant.getUserQuestionHashKey(loginId);
+        RMap<String, Long> questionMap = redissonClient.getMap(hashKey);
+        Map<String, Long> recordMap = questionMap.readAllMap();
+
+        // 3. 构建热力图数据
+        List<UserHeatMapVO> result = new ArrayList<>();
+        LocalDate current = startDate;
+        while (!current.isAfter(endDate)) {
+            String dateStr = current.toString();
+            UserHeatMapVO vo = new UserHeatMapVO();
+
+            // 基础日期
+            vo.setDate(LocalDate.parse(dateStr));
+            // 获取当日做题数
+            int count = recordMap.getOrDefault(dateStr, 0L).intValue();
+            vo.setCount(count);
+            // 计算活跃度等级（颜色深浅）
+            vo.setLevel(calculateHeatLevel(count));
+
+            result.add(vo);
+            current = current.plusDays(1);
+        }
+
+        return result;
+    }
+    private Integer calculateHeatLevel(int count) {
+        if (count == 0) return 0;
+        if (count <= 5) return 1;
+        if (count <= 15) return 2;
+        if (count <= 30) return 3;
+        return 4;
+    }
+    // todo 记录做题数 hash
+    public void addUserQuestionCount(long userId) {
+        String hashKey = Constant.getUserQuestionHashKey(userId);
+        String date = LocalDate.now().toString();
+
+        // Redisson Hash 操作
+        RMap<String, Long> map = redissonClient.getMap(hashKey);
+        // 原子自增1，没有则自动创建
+        map.addAndGet(date, 1L);
+
+        // 可选：设置过期时间（1年）
+        map.expire(365, TimeUnit.DAYS);
     }
 
     @Override

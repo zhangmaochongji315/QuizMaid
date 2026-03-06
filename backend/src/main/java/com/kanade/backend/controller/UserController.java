@@ -18,6 +18,7 @@ import com.kanade.backend.exception.ErrorCode;
 import com.kanade.backend.exception.ThrowUtils;
 import com.kanade.backend.model.dto.*;
 import com.kanade.backend.model.entity.User;
+import com.kanade.backend.model.vo.UserHeatMapVO;
 import com.kanade.backend.model.vo.UserLoginVO;
 import com.kanade.backend.model.vo.UserVO;
 import com.kanade.backend.service.UserService;
@@ -351,6 +352,22 @@ public class UserController {
             data.put(date,true);
         }
         return ResultUtils.success(data);
+    }
+
+    // 连续签到天数
+    @GetMapping("/continuous_sign_in_days")
+    public BaseResponse<Integer> getSignInDays(){
+        long loginId = StpUtil.getLoginIdAsLong();
+        Integer days = userService.getUserSignDays(loginId);
+        return ResultUtils.success(days);
+    }
+
+    // 做题热力图 分等级 0 - 4 别人可以查看
+    @GetMapping("/heatmap/{userId}")
+    public BaseResponse<List<UserHeatMapVO>> getSignInDays(@PathVariable long userId){
+
+        List<UserHeatMapVO> userHeatMap = userService.getUserHeatMap(userId);
+        return ResultUtils.success(userHeatMap);
     }
 }
 
