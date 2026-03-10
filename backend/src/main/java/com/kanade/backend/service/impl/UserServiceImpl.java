@@ -365,12 +365,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public boolean logout(HttpServletRequest request) {
-        User user =(User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if (user == null){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"not login");
-        }
         StpUtil.logout();
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        StpUtil.getSession().delete(USER_LOGIN_STATE);
         return true;
     }
 
