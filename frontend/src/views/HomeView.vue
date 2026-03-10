@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { healthCheck } from '@/api/userController.ts'
+
+healthCheck().then((res) => {
+  console.log(res)
+})
 </script>
 
 <template>

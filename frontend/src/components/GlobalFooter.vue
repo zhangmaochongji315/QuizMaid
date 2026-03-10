@@ -15,5 +15,10 @@
   border-top: 1px solid #f0f0f0;
   color: #666;
   font-size: 14px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 </style>

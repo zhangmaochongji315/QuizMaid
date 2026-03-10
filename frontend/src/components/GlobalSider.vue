@@ -1,41 +1,46 @@
 <template>
   <a-layout-sider width="220" class="global-sider">
-    <div class="sider-menu-wrapper">
-      <a-menu mode="inline" class="side-menu">
-        <a-menu-item key="dashboard">
-          <HomeOutlined />
-          <span>首页</span>
-        </a-menu-item>
-        <a-menu-item key="question">
-          <FileTextOutlined />
-          <span>试题管理</span>
-        </a-menu-item>
-        <a-menu-item key="paper">
-          <ReadOutlined />
-          <span>试卷管理</span>
-        </a-menu-item>
-        <a-menu-item key="exam">
-          <AuditOutlined />
-          <span>考试中心</span>
-        </a-menu-item>
-        <a-menu-item key="error">
-          <CloseCircleOutlined />
-          <span>错题本</span>
-        </a-menu-item>
-        <a-menu-item key="profile">
-          <UserOutlined />
-          <span>个人中心</span>
-        </a-menu-item>
-        <a-menu-item key="system">
-          <SettingOutlined />
-          <span>系统管理</span>
-        </a-menu-item>
-      </a-menu>
-    </div>
+    <a-menu 
+      mode="inline" 
+      class="side-menu" 
+      :selectedKeys="[currentRoute]"
+      @click="handleMenuClick"
+    >
+      <a-menu-item key="home">
+        <HomeOutlined />
+        <span>首页</span>
+      </a-menu-item>
+      <a-menu-item key="question">
+        <FileTextOutlined />
+        <span>试题管理</span>
+      </a-menu-item>
+      <a-menu-item key="paper">
+        <ReadOutlined />
+        <span>试卷管理</span>
+      </a-menu-item>
+      <a-menu-item key="exam">
+        <AuditOutlined />
+        <span>考试中心</span>
+      </a-menu-item>
+      <a-menu-item key="error-book">
+        <CloseCircleOutlined />
+        <span>错题本</span>
+      </a-menu-item>
+      <a-menu-item key="profile">
+        <UserOutlined />
+        <span>个人中心</span>
+      </a-menu-item>
+      <a-menu-item key="system">
+        <SettingOutlined />
+        <span>系统管理</span>
+      </a-menu-item>
+    </a-menu>
   </a-layout-sider>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import {
   HomeOutlined,
   FileTextOutlined,
@@ -45,25 +50,29 @@ import {
   UserOutlined,
   SettingOutlined
 } from '@ant-design/icons-vue'
+
+const router = useRouter()
+const route = useRoute()
+
+const currentRoute = computed(() => {
+  const path = route.path.replace('/', '')
+  return path || 'home'
+})
+
+const handleMenuClick = ({ key }: { key: string }) => {
+  router.push(`/${key}`)
+}
 </script>
 
 <style scoped>
 .global-sider {
   background: #ffffff;
   border-right: 1px solid #f0f0f0;
-  min-height: 100vh;
   position: fixed;
   left: 0;
-  top: 0;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 100;
-}
-
-.sider-menu-wrapper {
-  height: 100vh;
-  padding-top: 64px;
-  box-sizing: border-box;
+  top: 64px;
+  bottom: 52px;
+  overflow-y: auto;
 }
 
 .side-menu {
