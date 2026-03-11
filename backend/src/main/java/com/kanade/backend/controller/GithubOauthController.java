@@ -24,6 +24,8 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.HashMap;
 
+import static com.kanade.backend.common.Constant.USER_LOGIN_STATE;
+
 @RestController
 @RequestMapping("/oauth")
 @Slf4j
@@ -95,6 +97,8 @@ public class GithubOauthController {
 
             // ========== 4. Sa-Token 登录 ==========
             StpUtil.login(user.getId());
+            // fix 无法退出登录
+            StpUtil.getSession().set(USER_LOGIN_STATE,user);
             String token = StpUtil.getTokenValue();
 
             // ========== 5. 组装返回值（无序列化报错） ==========

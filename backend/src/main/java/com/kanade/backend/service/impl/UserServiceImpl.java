@@ -365,8 +365,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public boolean logout(HttpServletRequest request) {
-        StpUtil.logout();
         StpUtil.getSession().delete(USER_LOGIN_STATE);
+        StpUtil.logout();
         return true;
     }
 

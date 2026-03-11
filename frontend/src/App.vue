@@ -9,7 +9,7 @@ loginUserStore.fetchLoginUser()
 
 const route = useRoute()
 const showLayout = computed(() => {
-  return !route.path.startsWith('/user/')
+  return !route.path.startsWith('/user/') && !route.path.startsWith('/oauth/')
 })
 </script>
 
