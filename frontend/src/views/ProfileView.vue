@@ -27,6 +27,8 @@ const emailForm = reactive({
 })
 
 const passwordForm = reactive({
+  email: '',
+  code: '',
   password: '',
   checkPassword: '',
 })
@@ -116,7 +118,47 @@ const handleBindEmail = async () => {
   }
 }
 
+const handlePasswordSendCode = async () => {
+  if (!passwordForm.email) {
+    message.warning('请先输入邮箱')
+    return
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(passwordForm.email)) {
+    message.warning('请输入有效的邮箱地址')
+    return
+  }
+  sendingCode.value = true
+  try {
+    const res = await sendEmail({ email: passwordForm.email })
+    if (res.data.code === 0) {
+      message.success('验证码已发送')
+      countdown.value = 60
+      const timer = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+    } else {
+      message.error('发送验证码失败：' + res.data.message)
+    }
+  } catch (error) {
+    message.error('发送验证码请求失败')
+  } finally {
+    sendingCode.value = false
+  }
+}
+
 const handleResetPassword = async () => {
+  if (!passwordForm.email) {
+    message.warning('请先验证邮箱')
+    return
+  }
+  if (!passwordForm.code) {
+    message.warning('请输入验证码')
+    return
+  }
   if (passwordForm.password !== passwordForm.checkPassword) {
     message.warning('两次输入的密码不一致')
     return
@@ -129,8 +171,8 @@ const handleResetPassword = async () => {
   try {
     const res = await resetPassword({
       password: passwordForm.password,
-      email: loginUserStore.loginUser.email,
-      code: '',
+      email: passwordForm.email,
+      code: passwordForm.code,
     })
     if (res.data.code === 0) {
       message.success('密码修改成功')
@@ -210,6 +252,22 @@ const handleResetPassword = async () => {
         
         <a-tab-pane key="password" tab="修改密码">
           <a-form layout="vertical" :model="passwordForm" class="profile-form">
+            <a-form-item label="邮箱">
+              <div class="code-input-row">
+                <a-input v-model:value="passwordForm.email" placeholder="请输入邮箱" />
+                <a-button
+                  type="primary"
+                  :disabled="countdown > 0"
+                  :loading="sendingCode"
+                  @click="handlePasswordSendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                </a-button>
+              </div>
+            </a-form-item>
+            <a-form-item label="验证码">
+              <a-input v-model:value="passwordForm.code" placeholder="请输入验证码" />
+            </a-form-item>
             <a-form-item label="新密码">
               <a-input-password v-model:value="passwordForm.password" placeholder="请输入新密码" />
             </a-form-item>

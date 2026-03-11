@@ -1,15 +1,15 @@
 <script setup lang="ts">
+import UserManager from '@/components/UserManager.vue'
 </script>
 
 <template>
   <div class="page-content">
-    <h2>系统管理</h2>
+    <UserManager />
   </div>
 </template>
 
 <style scoped>
-.page-content h2 {
-  font-size: 20px;
-  color: #333;
+.page-content {
+  padding: 0;
 }
 </style>

@@ -2,9 +2,23 @@
   <a-layout-header class="global-header">
     <div class="header-left">
       <div class="logo">
-        <img src="../assets/logo.svg" alt="logo" />
+        <img src="../assets/logo.png" alt="logo" />
         <span class="title">AI 智能题库管理系统</span>
       </div>
+      <a-menu
+        mode="horizontal"
+        :selectedKeys="[currentRoute]"
+        @click="handleMenuClick"
+        style="border-bottom: none;"
+      >
+        <a-menu-item key="home">首页</a-menu-item>
+        <a-menu-item key="question">试题管理</a-menu-item>
+        <a-menu-item key="paper">试卷管理</a-menu-item>
+        <a-menu-item key="exam">考试中心</a-menu-item>
+        <a-menu-item key="error-book">错题本</a-menu-item>
+        <a-menu-item key="profile">个人中心</a-menu-item>
+        <a-menu-item v-if="loginUser.loginUser?.role === 'admin'" key="system">系统管理</a-menu-item>
+      </a-menu>
     </div>
     <div class="header-right">
       <a-dropdown>
@@ -25,18 +39,28 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { logout } from '@/api/userController'
 import { useLoginUserStore } from '@/stores/loginUser'
 
 const router = useRouter()
+const route = useRoute()
 const loginUser = useLoginUserStore()
 
 onMounted(() => {
   loginUser.fetchLoginUser()
 })
+
+const currentRoute = computed(() => {
+  const path = route.path.replace('/', '')
+  return path || 'home'
+})
+
+const handleMenuClick = ({ key }: { key: string }) => {
+  router.push(`/${key}`)
+}
 
 const handleLogout = async () => {
   try {
@@ -74,6 +98,7 @@ const handleLogout = async () => {
 .header-left {
   display: flex;
   align-items: center;
+  gap: 24px;
 }
 
 .logo {
@@ -83,8 +108,8 @@ const handleLogout = async () => {
 }
 
 .logo img {
-  width: 36px;
-  height: 36px;
+  width: auto;
+  height: 48px;
 }
 
 .logo .title {
