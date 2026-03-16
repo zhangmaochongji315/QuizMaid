@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/quizmaid?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: root
+    password: 114514
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mail:
+    username: kcz15222889028@126.com
+    password: RPw2NxVnxcZFj6XM
+    host: smtp.126.com
+    port: 465
+    default-encoding: UTF-8
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+            # 465端口必须开启SSL，禁用starttls
+          ssl:
+            enable: true
+            required: true
+          starttls:
+            enable: false
+          timeout: 10000
+          connectiontimeout: 10000
+github:
+  client-id: Ov23limAhsxNU8WHHlKB
+  client-secret: 8073140b1207ddffa36d67eb3518d8ae3f156bc3
+  redirect-uri: http://localhost:5173/oauth/github/callback
+# AI
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.deepseek.com
+      api-key: sk-59752a61ab4246d28fcc49bc3ff22e6c
+      model-name: deepseek-chat
+      log-requests: true
+      log-responses: true
+      strict-json-schema: true
+      response-format: json_object
+
+

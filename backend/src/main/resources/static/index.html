@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>用户中心 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 450px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        /* 选项卡 */
+        .tab {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .tab-item {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #666;
+        }
+        .tab-item.active {
+            color: #409eff;
+            border-bottom: 2px solid #409eff;
+        }
+        /* 表单 */
+        .form-box {
+            display: none;
+        }
+        .form-box.active {
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+        }
+        .input-group input:focus {
+            border-color: #409eff;
+        }
+        /* 验证码按钮 */
+        .code-btn {
+            width: 120px;
+            padding: 12px;
+            margin-left: 10px;
+            background: #409eff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .code-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .flex {
+            display: flex;
+            align-items: center;
+        }
+        /* 按钮 */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .login-btn {
+            background: #409eff;
+            color: white;
+        }
+        .github-btn {
+            background: #24292e;
+            color: white;
+            margin-top: 15px;
+        }
+        .logout-btn {
+            background: #f56c6c;
+            color: white;
+        }
+        /* 用户信息 */
+        .user-info {
+            display: none;
+            line-height: 2;
+            margin-bottom: 20px;
+        }
+        .user-info p {
+            color: #333;
+            font-size: 15px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="title">用户登录中心</h2>
+
+    <!-- 登录表单区域 -->
+    <div id="login-container">
+        <!-- 选项卡 -->
+        <div class="tab">
+            <button class="tab-item active" data-target="pwd-form">账号密码登录</button>
+            <button class="tab-item" data-target="email-form">邮箱验证码登录</button>
+        </div>
+
+        <!-- 账号密码登录表单 -->
+        <div id="pwd-form" class="form-box active">
+            <div class="input-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名">
+            </div>
+            <div class="input-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码">
+            </div>
+            <button class="btn login-btn" onclick="loginByPwd()">登录</button>
+        </div>
+
+        <!-- 邮箱验证码登录表单 -->
+        <div id="email-form" class="form-box">
+            <div class="input-group">
+                <label>邮箱</label>
+                <input type="email" id="email" placeholder="请输入邮箱">
+            </div>
+            <div class="input-group flex">
+                <input type="text" id="code" placeholder="请输入验证码">
+                <button class="code-btn" onclick="sendCode()" id="codeBtn">发送验证码</button>
+            </div>
+            <button class="btn login-btn" onclick="loginByEmail()">登录</button>
+        </div>
+
+        <!-- GitHub 第三方登录 -->
+        <button class="btn github-btn" onclick="loginByGithub()">GitHub 授权登录</button>
+    </div>
+
+    <!-- 用户信息区域（登录后显示） -->
+    <div id="user-container" class="user-info">
+        <h3>登录成功</h3>
+        <p>用户ID：<span id="userId"></span></p>
+        <p>用户名：<span id="usernameInfo"></span></p>
+        <p>昵称：<span id="nicknameInfo"></span></p>
+        <p>邮箱：<span id="emailInfo"></span></p>
+        <button class="btn logout-btn" onclick="logout()">退出登录</button>
+    </div>
+</div>
+
+<script>
+    // ==================== 选项卡切换 ====================
+    const tabItems = document.querySelectorAll('.tab-item');
+    const formBoxes = document.querySelectorAll('.form-box');
+    tabItems.forEach(item => {
+        item.addEventListener('click', () => {
+            tabItems.forEach(i => i.classList.remove('active'));
+            formBoxes.forEach(f => f.classList.remove('active'));
+            item.classList.add('active');
+            document.getElementById(item.dataset.target).classList.add('active');
+        });
+    });
+
+    // ==================== 1. 账号密码登录 ====================
+    async function loginByPwd() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+            alert('请输入用户名和密码');
+            return;
+        }
+
+        try {
+            const res = await fetch('/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.code === 200) {
+                alert('登录成功');
+                getUserInfo();
+            } else {
+                alert('登录失败：' + data.msg);
+            }
+        } catch (e) {
+            alert('登录异常');
+        }
+    }
+
+    // ==================== 2. 发送邮箱验证码 ====================
+    let codeTimer = null;
+    async function sendCode() {
+        const email = document.getElementById('email').value;
+        if (!email) {
+            alert('请输入邮箱');
+            return;
+        }
+
+        const btn = document.getElementById('codeBtn');
+        btn.disabled = true;
+        let count = 60;
+        btn.innerText = count + '秒后重发';
+
+        try {
+            await fetch(`/users/send?email=${email}`, { method: 'POST' });
+            alert('验证码发送成功');
+        } catch (e) {
+            alert('发送失败');
+        }
+
+        // 倒计时
+        codeTimer = setInterval(() => {
+            count--;
+            btn.innerText = count + '秒后重发';
+            if (count <= 0) {
+                clearInterval(codeTimer);
+                btn.disabled = false;
+                btn.innerText = '发送验证码';
+            }
+        }, 1000);
+    }
+
+    // ==================== 3. 邮箱验证码登录 ====================
+    async function loginByEmail() {
+        const email = document.getElementById('email').value;
+        const code = document.getElementById('code').value;
+        if (!email || !code) {
+            alert('请输入邮箱和验证码');
+            return;
+        }
+
+        try {
+            const res = await fetch('/users/email/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code })
+            });
+            const data = await res.json();
+            if (data.code === 200) {
+                alert('登录成功');
+                getUserInfo();
+            } else {
+                alert('登录失败：' + data.msg);
+            }
+        } catch (e) {
+            alert('登录异常');
+        }
+    }
+
+    // ==================== 4. GitHub 第三方登录 ====================
+    function loginByGithub() {
+        // 对接你后端的 GitHub 登录接口
+        window.location.href = '/users/login/github';
+    }
+
+    // ==================== 5. 获取登录用户信息 ====================
+    async function getUserInfo() {
+        try {
+            const res = await fetch('/users/get/login');
+            const data = await res.json();
+            if (data.code === 200) {
+                // 隐藏登录表单，显示用户信息
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('user-container').style.display = 'block';
+
+                // 填充用户数据
+                const user = data.data;
+                document.getElementById('userId').innerText = user.id;
+                document.getElementById('usernameInfo').innerText = user.username;
+                document.getElementById('nicknameInfo').innerText = user.nickname || '未设置';
+                document.getElementById('emailInfo').innerText = user.email || '未绑定';
+            } else {
+                // 未登录
+                document.getElementById('login-container').style.display = 'block';
+                document.getElementById('user-container').style.display = 'none';
+            }
+        } catch (e) {
+            document.getElementById('login-container').style.display = 'block';
+        }
+    }
+
+    // ==================== 6. 退出登录 ====================
+    async function logout() {
+        try {
+            await fetch('/users/logout', { method: 'POST' });
+            alert('退出成功');
+            window.location.reload();
+        } catch (e) {
+            alert('退出异常');
+        }
+    }
+
+    // 页面加载：自动检测登录状态
+    window.onload = getUserInfo;
+</script>
+</body>
+</html>
