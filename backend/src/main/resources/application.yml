@@ -2,10 +2,6 @@ spring:
   main:
     lazy-initialization: false
   # redis配置
-  redis:
-    database: 0
-    host: 127.0.0.1
-    port: 6379
   profiles:
     active: local
   # MySQL ?????
@@ -64,6 +60,9 @@ spring:
   data:
     redis:
       timeout: 10s
+      host: 127.0.0.1
+      database: 0
+      port: 6379
 
 # springdoc-openapi????
 springdoc:
