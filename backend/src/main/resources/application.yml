@@ -1,10 +1,20 @@
 spring:
   main:
     lazy-initialization: false
-  # redis配置
+    # redis配置
+  redis:
+    # Redis数据库索引（默认为0）
+    database: 1
+    # Redis服务器地址
+    host: 127.0.0.1
+    # Redis服务器连接端口
+    port: 6379
+    # Redis服务器连接密码（默认为空）
+    # password:
+
   profiles:
     active: local
-  # MySQL ?????
+  # MySQL 配置
 #  datasource:
 #    url: jdbc:mysql://localhost:3306/quizmaid?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
 #    username: root
@@ -38,7 +48,7 @@ spring:
 #          timeout: 10000
 #          connectiontimeout: 10000
 
-  # MyBatis ??
+  # MyBatis 配置
   mybatis:
     mapper-locations: classpath:mapper/**/*.xml
     type-aliases-package: com.kanade.backend.model.entity
@@ -47,7 +57,7 @@ spring:
       cache-enabled: true
       use-generated-keys: true
 
-  # MyBatis Plus ??
+  # MyBatis Plus 配置
   mybatis-plus:
     mapper-locations: classpath:mapper/**/*.xml
     type-aliases-package: com.kanade.backend.model.entity
@@ -57,14 +67,8 @@ spring:
         logic-delete-field: deleted
         logic-not-delete-value: 0
         logic-delete-value: 1
-  data:
-    redis:
-      timeout: 10s
-      host: 127.0.0.1
-      database: 0
-      port: 6379
 
-# springdoc-openapi????
+# springdoc-openapi配置
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -76,7 +80,7 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.kanade.backend.controller
-# knife4j???????????????
+# knife4j增强swagger文档配置
 knife4j:
   enable: true
   setting:

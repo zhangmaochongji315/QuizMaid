@@ -2,6 +2,7 @@ package com.kanade.backend.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.json.JSONUtil;
 import com.kanade.backend.common.BaseResponse;
 import com.kanade.backend.common.DeleteRequest;
 import com.kanade.backend.common.ResultUtils;
@@ -34,6 +35,13 @@ public class QuestionController {
     public BaseResponse<Long> addQuestion(@RequestBody QuestionAddDTO addDTO) {
         Question question = new Question();
         BeanUtils.copyProperties(addDTO, question);
+
+        if (addDTO.getOptions() != null) {
+            question.setOptions(addDTO.getOptions().toString());
+        }
+        if (addDTO.getTags() != null) {
+            question.setTags(JSONUtil.toJsonStr(addDTO.getTags()));
+        }
         Long id = questionService.addQuestion(question);
         return ResultUtils.success(id);
     }

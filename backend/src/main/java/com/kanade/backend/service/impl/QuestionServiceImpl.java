@@ -3,6 +3,7 @@ package com.kanade.backend.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.json.JSONUtil;
 import com.kanade.backend.ai.AiService;
 import com.kanade.backend.ai.AiServiceFactory;
 import com.kanade.backend.ai.model.LabelResult;
@@ -14,10 +15,12 @@ import com.kanade.backend.model.entity.Question;
 import com.kanade.backend.model.enums.TaskEnum;
 import com.kanade.backend.model.vo.QuestionVO;
 import com.kanade.backend.service.QuestionService;
+import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> implements QuestionService {
 
     @Resource
@@ -33,26 +37,50 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     @Override
     public Long addQuestion(Question question) {
         if (StrUtil.isBlank(question.getContent())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "题干不能为空");
+            throw new BusinessException(400, "题干不能为空");
         }
         String md5 = DigestUtil.md5Hex(question.getContent());
-        QueryWrapper wrapper = QueryWrapper.create().eq("questionMd5", md5);
-        if (this.count(wrapper) > 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该试题已存在");
+
+
+        // 查询所有数据（含已删除）
+        Question existQuestion = LogicDeleteManager.execWithoutLogicDelete(() -> {
+            QueryWrapper wrapper = QueryWrapper.create()
+                    .eq(Question::getQuestionMd5, md5);
+            return this.getOne(wrapper);
+        });
+
+        // 1. 数据存在【未删除】→ 直接抛重复错误
+        if (existQuestion != null && existQuestion.getIsDeleted() == 0) {
+            throw new BusinessException(400, "该试题已存在");
         }
+
+        // 2. 数据存在【已删除】→ 恢复数据
+        if (existQuestion != null && existQuestion.getIsDeleted() == 1) {
+            LogicDeleteManager.execWithoutLogicDelete(() -> {
+                existQuestion.setIsDeleted(0);
+                existQuestion.setCreatorId(StpUtil.getLoginIdAsLong());
+                existQuestion.setStatus(1);
+                this.updateById(existQuestion);
+            });
+            return existQuestion.getId();
+        }
+
+        // 3. 无数据 → 新增
         question.setQuestionMd5(md5);
+        question.setCreatorId(StpUtil.getLoginIdAsLong());
+        question.setStatus(question.getStatus() == null ? 1 : question.getStatus());
 
-        Long creatorId = StpUtil.getLoginIdAsLong();
-        question.setCreatorId(creatorId);
-
-        if (question.getStatus() == null) {
-            question.setStatus(1);
+        if(question.getTags() == null || question.getKnowledgePoints() == null){
+            LabelResult labelResult = AiServiceFactory.getAiService(TaskEnum.LABEL).generateQuestionLabel(question.toString());
+            question.setTags(JSONUtil.toJsonStr(labelResult.getTags()));
+            question.setKnowledgePoints(labelResult.getKnowledgePoints());
+            question.setChapter(labelResult.getChapter());
+            question.setSubject(labelResult.getSubject());
+            question.setDifficulty(labelResult.getDifficult());
         }
 
-        boolean saved = this.save(question);
-        if (!saved) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "添加失败");
-        }
+        this.save(question);
+
         return question.getId();
     }
 

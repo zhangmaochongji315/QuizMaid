@@ -1,8 +1,13 @@
 package com.kanade.backend.model.dto;
 
+import cn.hutool.json.JSONArray;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class QuestionAddDTO {
     /**
      * 题型 1-单选 2-多选 3-填空 4-简答
@@ -32,7 +37,7 @@ public class QuestionAddDTO {
     /**
      * 题目标签（JSON数组字符串）
      */
-    private String tags;
+    private List<String> tags;
 
     /**
      * 题干内容
@@ -42,7 +47,7 @@ public class QuestionAddDTO {
     /**
      * 选项JSON（字符串）
      */
-    private String options;
+    private JSONArray options;
 
     /**
      * 标准答案
