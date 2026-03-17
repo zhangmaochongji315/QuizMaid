@@ -106,6 +106,19 @@ sa-token:
   # 是否输出操作日志
   is-log: true
 
+  #RabbitMQ 配置
+rabbitmq:
+  host: localhost
+  port: 8080
+  username: root
+  password: whw315216
+  virtual-host: /
+  listener:
+    simple:
+      acknowledge-mode: manual
+      concurrency: 1
+      max-concurrency: 5
+
 #github:
 #  client-id:
 #  client-secret:
