@@ -68,6 +68,7 @@ spring:
         logic-not-delete-value: 0
         logic-delete-value: 1
 
+
 # springdoc-openapi配置
 springdoc:
   swagger-ui:
