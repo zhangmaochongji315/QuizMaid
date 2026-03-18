@@ -14,7 +14,7 @@ spring:
 
   profiles:
     active: local
-  # MySQL 配置
+  # MySQL ?????
 #  datasource:
 #    url: jdbc:mysql://localhost:3306/quizmaid?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
 #    username: root
@@ -107,7 +107,7 @@ sa-token:
   # 是否输出操作日志
   is-log: true
 
-  #RabbitMQ 配置 
+  #RabbitMQ 配置
 rabbitmq:
   host: localhost
   port: 8080
