@@ -32,6 +32,4 @@ public interface QuestionService extends IService<Question> {
      */
     boolean updateStatus(Long id, Integer status);
 
-    // 原有的 AI 标注方法保留
-    Question addLabels(Question question);
 }

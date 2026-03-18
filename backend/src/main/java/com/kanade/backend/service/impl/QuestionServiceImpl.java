@@ -187,15 +187,5 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         return vo;
     }
 
-    // ========== AI 标注方法（原有） ==========
-    @Override
-    public Question addLabels(Question question) {
-        AiService aiService = aiServiceFactory.getAiService(TaskEnum.LABEL);
-        LabelResult labelResult = aiService.generateQuestionLabel(question.toString());
-        question.setDifficulty(labelResult.getDifficult());
-        question.setTags(labelResult.getKnowledgePoints().toString());
-        question.setSubject(labelResult.getSubject());
-        this.updateById(question);
-        return null; // 原返回 null，可按需调整
-    }
+    
 }

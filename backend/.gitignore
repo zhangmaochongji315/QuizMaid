@@ -14,10 +14,18 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+# 强制忽略.idea文件夹（递归匹配所有目录下的.idea）
+**/.idea/
+# 忽略IDEA生成的配置文件
 *.iws
 *.iml
 *.ipr
+# 补充忽略IDEA的其他缓存文件
+*.iij
+*.iiq
+.idea_modules/
+*.jws
+*.jspx
 
 ### NetBeans ###
 /nbproject/private/
@@ -33,3 +41,4 @@ build/
 .vscode/
 
 *local*
+
