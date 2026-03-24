@@ -1,13 +1,15 @@
 package com.kanade.backend.service;
 
-import com.mybatisflex.core.service.IService;
+import com.kanade.backend.model.dto.PaperQuestionAddDTO;
+import com.kanade.backend.model.dto.PaperQuestionUpdateDTO;
 import com.kanade.backend.model.entity.Paperquestion;
+import com.mybatisflex.core.service.IService;
 
-/**
- * 试卷试题关联表 服务层。
- *
- * @author kanade
- */
-public interface PaperquestionService extends IService<Paperquestion> {
+public interface PaperQuestionService extends IService<Paperquestion> {
 
+    Long addQuestionToPaper(PaperQuestionAddDTO dto);
+
+    boolean updatePaperQuestion(PaperQuestionUpdateDTO dto);
+
+    boolean removeQuestionFromPaper(Long relationId);
 }
